@@ -13,6 +13,8 @@ class GetUsersInLobbyStage(AbstractClientStage):
 
         users_list = content['users']
 
+        users_list.remove(client.username)
+
         logging.info(f'Список пользователей: {users_list}')
 
         chat_list_window = ChatListWindow()
