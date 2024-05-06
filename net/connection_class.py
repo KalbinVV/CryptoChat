@@ -2,6 +2,7 @@
 import json
 import logging
 import socket
+import threading
 import time
 from typing import Optional
 
@@ -23,6 +24,8 @@ class Connection:
         self.__is_alive = AsyncFlag(value=True)
         self.storage = dict()
 
+        self.__lock = threading.Lock()
+
     def send_raw(self, content: bytes | int) -> None:
         self.__connection_socket.send(content)
 
@@ -34,41 +37,42 @@ class Connection:
                                                   from_username: Optional[str] = None):
         from net.package_classes.secure_package_by_communicate_with_server_class \
             import SecurePackageByCommunicateWithServer
-        package = SecurePackageByCommunicateWithServer(header, content, common_key, from_username)
 
+        package = SecurePackageByCommunicateWithServer(header, content, common_key, from_username)
         self.send_package(package)
 
     def receive_package(self):
-        header_size = self.__connection_socket.recv(10)
+        with self.__lock:
+            header_size = self.__connection_socket.recv(10)
 
-        logging.debug(f'Header size {header_size} from {self.address}')
+            logging.debug(f'Header size {header_size} from {self.address}')
 
-        if not header_size:
-            from net.package_classes.insecure_package_class import InsecurePackage
-            return InsecurePackage(header=PackageHeader.Disconnected,
-                                   content=b'')
+            if not header_size:
+                from net.package_classes.insecure_package_class import InsecurePackage
+                return InsecurePackage(header=PackageHeader.Disconnected,
+                                       content=b'')
 
-        package_header_raw = self.__connection_socket.recv(int(header_size.decode()))
-        package_header = json.loads(package_header_raw.decode())
+            package_header_raw = self.__connection_socket.recv(int(header_size.decode()))
+            package_header = json.loads(package_header_raw.decode())
 
-        logging.debug(f'Header {package_header_raw} from {self.address}')
+            logging.debug(f'Header {package_header_raw} from {self.address}')
 
-        package_type = PackageType[package_header['type']]
+            package_type = PackageType[package_header['type']]
 
-        content_length = int(package_header['content_length'])
+            content_length = int(package_header['content_length'])
 
-        if not package_type.is_secure():
-            content = self.__get_insecure_content(content_length)
-        else:
-            if package_type == PackageType.SecureCommunicateWithServer:
-                tag_length = package_header['tag_length']
-
-                content = self.__get_secure_content_by_server(tag_length, content_length)
+            if not package_type.is_secure():
+                content = self.__get_insecure_content(content_length)
             else:
-                content = self.__get_secure_content_by_server(0, content_length)
+                if package_type == PackageType.SecureCommunicateWithServer:
+                    tag_length = package_header['tag_length']
 
-        return PackageBuilder.from_header(package_header,
-                                          content)
+                    content = self.__get_secure_content_by_server(tag_length, content_length)
+                else:
+                    content = self.__get_secure_content_by_server(0, content_length)
+
+            return PackageBuilder.from_header(package_header,
+                                              content)
 
     def __get_insecure_content(self, content_length: int) -> bytes:
         return self.__connection_socket.recv(content_length)
@@ -88,9 +92,9 @@ class Connection:
         content = self.__connection_socket.recv(content_length)
         logging.debug(f'Raw content: {content}')
 
-        cipher = AES.new(common_key, AES.MODE_EAX, nonce)
+        decipher = AES.new(common_key, AES.MODE_EAX, nonce)
 
-        decrypted_content = cipher.decrypt(content)
+        decrypted_content = decipher.decrypt(content)
 
         logging.debug(f'Decrypted content: {decrypted_content}')
 

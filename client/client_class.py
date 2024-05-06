@@ -9,8 +9,10 @@ from net.package_classes.package_class import Package
 from net.package_classes.package_headers import PackageHeader
 from net.package_classes.secure_package_for_clients_communication_class import SecurePackageForClientsCommunication
 from utils.async_utils import AsyncFlag
+from utils.singleton_utils import singleton
 
 
+@singleton
 class Client:
     def __init__(self):
         self.__client_socket = socket.socket()
@@ -23,7 +25,7 @@ class Client:
 
         self.__username = ''
 
-    def connect(self, address: str, port: int) -> None:
+    def connect(self, address: str, port: int, username: str) -> None:
         self.__client_socket.connect((address, port))
 
         self.__server_is_active.value = True
@@ -31,7 +33,7 @@ class Client:
         self.__server_connection = Connection(self.__client_socket, (address, port))
 
         self.send(InsecurePackage(header=PackageHeader.FirstConnect,
-                                  content=b''))
+                                  content=json.dumps({'username': username}).encode()))
 
         self.__wait_packages_from_server()
 
@@ -65,6 +67,8 @@ class Client:
                 logging.info('Соединение с сервером потеряно')
 
                 self.disconnect()
+
+                break
             else:
                 from client.stages.client_stages_dict import get_stage
 

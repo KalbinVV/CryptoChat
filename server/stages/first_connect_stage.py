@@ -1,3 +1,4 @@
+import json
 import logging
 
 from net.connection_class import Connection
@@ -9,6 +10,12 @@ from server.stages.abstract_stage_class import AbstractStage
 
 class FirstConnectStage(AbstractStage):
     def process(self, connection: Connection, package: Package):
+        content = json.loads(package.content.decode())
+        server = connection.storage['server']
+
+        username = content['username']
+        server.update_username(connection, username)
+
         logging.info(f'{connection.address} соединение позволено!')
 
         connection.send_package(InsecurePackage(header=PackageHeader.FirstConnect,
