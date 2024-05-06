@@ -12,7 +12,7 @@ server_port = int(input('Введите порт: '))
 
 client = Client()
 
-client_thread = threading.Thread(target=client.connect, args=(server_addr, server_port))
+client_thread = threading.Thread(target=client.connect, args=(server_addr, server_port, 'test_user'))
 client_thread.start()
 
 while client.is_active:

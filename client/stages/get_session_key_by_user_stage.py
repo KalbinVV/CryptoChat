@@ -8,6 +8,8 @@ from net.package_classes.package_class import Package
 
 class GetSessionKeyByUserStage(AbstractClientStage):
     def process_package(self, client: Client, package: Package) -> None:
+        logging.debug(package.content)
+
         content = json.loads(package.content.decode())
 
         if content['status']:

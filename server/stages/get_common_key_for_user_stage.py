@@ -45,5 +45,5 @@ class GetCommonKeyForUserStage(AbstractStage):
             content['to_username'] = to_username
 
             from net.package_classes.insecure_package_class import InsecurePackage
-            to_connection.send_package(InsecurePackage(PackageHeader.GetCommonKeyForUser,
-                                                       json.dumps(content).encode()))
+            to_connection.send(InsecurePackage(PackageHeader.GetCommonKeyForUser,
+                                               json.dumps(content).encode()))

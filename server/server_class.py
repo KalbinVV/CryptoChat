@@ -86,6 +86,11 @@ class CryptoChatServer:
                 logging.info(f'{connection.address} отключился от сессии')
 
                 self.__connections.remove(connection)
+
+                username = self.__connection_username_dict[connection]
+
+                del self.__connection_username_dict[connection]
+                del self.__usernames_connection_dict[username]
             else:
                 if package.package_type == PackageType.SecureCommunicateBetweenClients:
                     self.__resend_to_client(package)
