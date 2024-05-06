@@ -27,9 +27,13 @@ class Connection:
         self.__lock = threading.Lock()
 
     def send_raw(self, content: bytes | int) -> None:
+        logging.debug(f'Send raw data: {content}')
+
         self.__connection_socket.send(content)
 
     def send_package(self, package: Package, encrypt: bool = True) -> None:
+        logging.debug(f'Send package {package}...')
+
         package.send(self, encrypt)
 
     def send_secure_content_by_server_communicate(self, header: PackageHeader,

@@ -1,5 +1,6 @@
 import json
 import logging
+from time import sleep
 
 from net.connection_class import Connection
 from net.package_classes.package_class import Package
@@ -44,6 +45,8 @@ class GetCommonKeyForUserStage(AbstractStage):
             content['from_username'] = from_username
             content['to_username'] = to_username
 
-            from net.package_classes.insecure_package_class import InsecurePackage
-            to_connection.send(InsecurePackage(PackageHeader.GetCommonKeyForUser,
-                                               json.dumps(content).encode()))
+            sleep(0.5)
+
+            to_connection.send_secure_content_by_server_communicate(PackageHeader.GetCommonKeyForUser,
+                                                                    json.dumps(content).encode(),
+                                                                    to_connection.storage['common_key'])

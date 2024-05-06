@@ -5,6 +5,7 @@ import customtkinter
 
 from client.client_class import Client
 from client.client_gui.chat import ChatWindow
+from client.client_gui.chats_manager import ChatsManager
 from net.package_classes.package_headers import PackageHeader
 from utils.singleton_utils import singleton
 
@@ -18,6 +19,7 @@ class ChatListWindow(customtkinter.CTk):
 
         self.title("CryptoChat (Список чатов)")
         self.geometry(f"{300}x{300}")
+        self.protocol('WM_DELETE_WINDOW', self.__on_closing)
 
         self.__title_label = customtkinter.CTkLabel(self,
                                                     text='Список чатов: ',
@@ -46,6 +48,14 @@ class ChatListWindow(customtkinter.CTk):
                                                   command=self.__make_open_chat_action(username))
             chat_button.pack(pady=5)
 
+    def __on_closing(self):
+        client = Client()
+
+        client.disconnect()
+
+        self.destroy()
+
+
     def __make_open_chat_action(self, username: str):
         def method():
             self.__on_open_chat(username)
@@ -59,13 +69,13 @@ class ChatListWindow(customtkinter.CTk):
 
     @staticmethod
     def __on_open_chat(username: str):
-        logging.info(username)
-
-        chat = ChatWindow(username)
-
         client = Client()
 
         client.send_security_content_to_server(PackageHeader.GetCommonKeyForUser,
                                                json.dumps({'to_username': username}).encode())
 
-        chat.mainloop()
+        chats_manager = ChatsManager()
+
+        chat_window = chats_manager.open_chat(username)
+
+        chat_window.mainloop()

@@ -15,7 +15,7 @@ from utils.singleton_utils import singleton
 @singleton
 class Client:
     def __init__(self):
-        self.__client_socket = socket.socket()
+        self.__client_socket = socket.socket(socket.AF_INET)
         self.__server_connection: Optional[Connection] = None
         self.__server_is_active = AsyncFlag(value=False)
 
@@ -32,8 +32,11 @@ class Client:
 
         self.__server_connection = Connection(self.__client_socket, (address, port))
 
+        self.__username = username
+
+    def start(self):
         self.send(InsecurePackage(header=PackageHeader.FirstConnect,
-                                  content=json.dumps({'username': username}).encode()))
+                                  content=json.dumps({'username': self.__username}).encode()))
 
         self.__wait_packages_from_server()
 
@@ -109,8 +112,12 @@ class Client:
         self.__server_connection.send_package(package)
 
     @property
-    def is_active(self):
+    def is_active(self) -> bool:
         return self.__server_is_active.value
+
+    @property
+    def username(self) -> Optional[str]:
+        return self.__username
 
     def disconnect(self) -> None:
         if self.__server_is_active.value:

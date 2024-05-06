@@ -14,7 +14,7 @@ from utils.async_utils import AsyncFlag
 
 class CryptoChatServer:
     def __init__(self):
-        self.__server_socket = socket.socket()
+        self.__server_socket = socket.socket(socket.AF_INET)
         self.__server_is_running = AsyncFlag(value=False)
         self.__connections: list[Connection] = []
         self.__connections_threads: list[threading.Thread] = []
@@ -76,6 +76,8 @@ class CryptoChatServer:
 
     def __start_connection_processing(self, connection: Connection) -> Optional[NoReturn]:
         while connection.is_alive and self.__server_is_running.value:
+            logging.debug(f'{connection.address} now waiting packages...')
+
             package = connection.receive_package()
 
             logging.debug(f'Package {package} from {connection.address}')
@@ -94,7 +96,7 @@ class CryptoChatServer:
             else:
                 if package.package_type == PackageType.SecureCommunicateBetweenClients:
                     self.__resend_to_client(package)
-                    return
+                    continue
 
                 stage = get_stage(package.header)
                 stage.process(connection, package)
@@ -108,12 +110,14 @@ class CryptoChatServer:
             logging.info(f'Неизвестный получатель: {to_username}, исключаем пакет.')
             return
 
-        logging.info(f'FROM: {package.from_username}')
+        logging.info(f'Get package from: {package.from_username}')
 
         connection.send_secure_content_by_server_communicate(package.header,
                                                              package.content,
                                                              connection.storage['common_key'],
                                                              package.from_username)
+
+        logging.info(f'Sent package to {self.__connection_username_dict[connection]}')
 
     def stop(self) -> Optional[NoReturn]:
         self.__server_is_running.value = False

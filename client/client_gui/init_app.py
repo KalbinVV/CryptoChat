@@ -1,4 +1,6 @@
 import threading
+import tkinter.messagebox
+from typing import Optional
 
 import customtkinter as customtkinter
 
@@ -15,6 +17,8 @@ class InitApp(customtkinter.CTk):
         self.title("CryptoChat")
         self.geometry(f"{300}x{300}")
         self.protocol('WM_DELETE_WINDOW', self.__on_closing)
+
+        self.bind('<Return>', self.__on_connect_to_server)
 
         self.__title_label = customtkinter.CTkLabel(self,
                                                     text='CryptoChat',
@@ -60,16 +64,26 @@ class InitApp(customtkinter.CTk):
     def __on_closing(self):
         self.destroy()
 
-    def __on_connect_to_server(self):
+    def __on_connect_to_server(self, event: Optional[tkinter.Event] = None):
         address = self.__address_entry.get()
         port = int(self.__port_entry.get())
         username = self.__username_entry.get()
 
-        client = Client()
+        if len(username) <= 4:
+            tkinter.messagebox.showerror('Невозможно подключиться!',
+                                         'Имя должно состоять минимум из 4 символов!')
+            return
 
-        client_thread = threading.Thread(target=client.connect,
-                                         args=(address, port, username))
-        client_thread.start()
+        try:
+            client = Client()
+
+            client.connect(address, port, username)
+
+            client_thread = threading.Thread(target=client.start)
+            client_thread.start()
+        except (Exception,) as e:
+            tkinter.messagebox.showerror('Не удалось подключиться!', str(e))
+            return
 
         self.destroy()
 
