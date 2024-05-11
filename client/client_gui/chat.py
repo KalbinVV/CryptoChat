@@ -1,5 +1,6 @@
 import logging
 import tkinter
+from tkinter import filedialog
 from typing import Optional
 
 import customtkinter
@@ -36,7 +37,13 @@ class ChatWindow(customtkinter.CTk):
 
         self.__text_entry.bind('<Return>', self.__on_message_send)
 
-        self.__text_entry.place(relx=0, rely=0.9, relwidth=0.9)
+        self.__text_entry.place(relx=0, rely=0.9, relwidth=0.8)
+
+        self.__send_file_button = customtkinter.CTkButton(self,
+                                                          text='#',
+                                                          font=('Monospace', 12),
+                                                          corner_radius=0,
+                                                          command=self.__on_file_send)
 
         self.__send_message_button = customtkinter.CTkButton(self,
                                                              text='>',
@@ -44,7 +51,8 @@ class ChatWindow(customtkinter.CTk):
                                                              corner_radius=0,
                                                              command=self.__on_message_send)
 
-        self.__send_message_button.place(relx=0.9, rely=0.9, relwidth=0.1)
+        self.__send_file_button.place(relx=0.9, rely=0.9, relwidth=0.1)
+        self.__send_message_button.place(relx=0.8, rely=0.9, relwidth=0.1)
 
     def add_message(self, username: str, message: str) -> None:
         message_label = customtkinter.CTkLabel(self.__scrollable_chat_frame,
@@ -69,6 +77,14 @@ class ChatWindow(customtkinter.CTk):
                                                text.encode())
 
         self.add_message(client.username, text)
+
+    def __on_file_send(self):
+        file = filedialog.askopenfile()
+
+        client = Client()
+
+        client.send_file_to_client(self.__username,
+                                   file.name)
 
     def __on_closing(self) -> None:
         from client.client_gui.chats_manager import ChatsManager

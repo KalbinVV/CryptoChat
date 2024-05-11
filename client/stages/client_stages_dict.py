@@ -1,5 +1,6 @@
 from client.stages.abstract_client_stage_class import AbstractClientStage
 from client.stages.first_client_connect_stage import FirstClientConnectStage
+from client.stages.get_file_stage import GetFileStage
 from client.stages.get_message_from_user_stage import GetMessageFromUserStage
 from client.stages.get_open_key_stage import GetOpenKeyStage
 from client.stages.get_pair_pq_stage import GetPairPqStage
@@ -17,5 +18,6 @@ def get_stage(header: PackageHeader) -> AbstractClientStage:
         PackageHeader.GetUsersInLobby: GetUsersInLobbyStage,
         PackageHeader.JoinToLobby: JoinToLobbyStage,
         PackageHeader.GetCommonKeyForUser: GetSessionKeyByUserStage,
-        PackageHeader.SendMessageToUser: GetMessageFromUserStage
+        PackageHeader.SendMessageToUser: GetMessageFromUserStage,
+        PackageHeader.SendFileToUser: GetFileStage
     }[header]()

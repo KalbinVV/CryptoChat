@@ -11,3 +11,4 @@ class PackageHeader(enum.Enum):
     GetUsersInLobby = 'GetUsersInLobby'
     GetCommonKeyForUser = 'GetCommonKeyForUser'
     SendMessageToUser = 'SendMessageToUser'
+    SendFileToUser = 'SendFileToUser'

@@ -4,6 +4,7 @@ import socket
 from typing import Optional
 
 from net.connection_class import Connection
+from net.package_classes.file_package import FilePackage
 from net.package_classes.insecure_package_class import InsecurePackage
 from net.package_classes.package_class import Package
 from net.package_classes.package_headers import PackageHeader
@@ -108,6 +109,25 @@ class Client:
                                                        to_username,
                                                        common_key,
                                                        session_key)
+
+        self.__server_connection.send_package(package)
+
+    def send_file_to_client(self, to_username: str, file_path: str):
+        if 'common_key' not in self.get_server_storage():
+            raise Exception('Невозможно отправить защищенные данные, безопасное соединение не установлено!')
+
+        common_key = self.get_server_storage()['common_key']
+
+        session_key = self.get_session_key_for_username(to_username)
+
+        if not session_key:
+            logging.error(f'Нельзя отправить сообщение {to_username}, вы не установили с ним безопасное соединение!')
+
+        package = FilePackage(file_path,
+                              self.__username,
+                              to_username,
+                              common_key,
+                              session_key)
 
         self.__server_connection.send_package(package)
 
